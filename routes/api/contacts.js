@@ -48,6 +48,7 @@ router.post("/", async (req, res, next) => {
     });
   } catch (error) {
     console.log(error);
+    res.status(500).json({ message: "An error occurred" });
   }
 });
 
@@ -56,11 +57,14 @@ router.delete("/:contactId", async (req, res, next) => {
     const { contactId } = req.params;
     const isContactDeleted = await contacts.removeContact(contactId);
 
-    isContactDeleted
-      ? res.status(200).json({ message: "contact deleted" })
-      : res.status(404).json({ message: "not found" });
+    if (isContactDeleted) {
+      res.status(200).json({ message: "Contact deleted successfully" });
+    } else {
+      res.status(404).json({ message: "Contact not found" });
+    }
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).json({ message: "An error occurred" });
   }
 });
 
@@ -84,6 +88,7 @@ router.put("/:contactId", async (req, res, next) => {
     }
   } catch (error) {
     console.log(error);
+    res.status(500).json({ message: "An error occurred" });
   }
 });
 

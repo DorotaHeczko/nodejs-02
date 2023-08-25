@@ -6,8 +6,8 @@ const getContacts = async () => {
   return JSON.parse(await contacts);
 };
 
-const saveContact = async (data) =>
-  await fs.writeFile("models/contacts.json", JSON.stringify(data));
+const saveContact = async (contact) =>
+  await fs.writeFile("models/contacts.json", JSON.stringify(contact));
 
 
 
@@ -26,7 +26,7 @@ const getContactById = async (contactId) => {
   try {
     const contacts = await getContacts();
 
-    return contacts.find((data) => data.id === contactId);
+    return contacts.find((contact) => contact.id === contactId);
   } catch (error) {
     console.log(error);
     throw error; 
@@ -37,7 +37,7 @@ const getContactById = async (contactId) => {
 const removeContact = async (contactId) => {
   try {
     const contacts = await getContacts();
-    const targetContact = contacts.find((data) => data.id === contactId);
+    const targetContact = contacts.find((contact) => contact.id === contactId);
 
     if (targetContact) {
       const contactsAfterRemove = contacts.filter(
