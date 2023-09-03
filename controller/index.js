@@ -12,6 +12,7 @@ const validateContactId = (contactId, res) => {
   if (!isValidId) return res.status(400).send({ message: "Invalid payload" });
 };
 
+
 const get = async (req, res, next) => {
   try {
     const allContacts = await service.getAllContacts();
