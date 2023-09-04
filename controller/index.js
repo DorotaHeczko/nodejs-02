@@ -1,4 +1,4 @@
-const service = require("../service");
+const userInfo = require("../service");
 const {
   validateAddContact,
   validateUpdateContact,
@@ -15,7 +15,7 @@ const validateContactId = (contactId, res) => {
 
 const get = async (req, res, next) => {
   try {
-    const allContacts = await service.getAllContacts();
+    const allContacts = await userInfo.getAllContacts();
     res.status(200).json({
       message: "success",
       data: { allContacts },
@@ -29,7 +29,7 @@ const getById = async (req, res, next) => {
   try {
     const { contactId } = req.params;
     validateContactId(contactId, res);
-    const contact = await service.getContactById(contactId);
+    const contact = await userInfo.getContactById(contactId);
     if (contact) {
       res.status(200).json({
         message: "success",
@@ -48,7 +48,7 @@ const create = async (req, res, next) => {
     const body = req.body;
     const { error } = validateAddContact(body);
     if (error) return res.status(400).send({ message: error.details });
-    const allContactsData = await service.createContact(body);
+    const allContactsData = await userInfo.createContact(body);
     res.status(201).json({
       message: "contact added",
       data: { allContactsData },
@@ -63,7 +63,7 @@ const remove = async (req, res, next) => {
   try {
     const { contactId } = req.params;
     validateContactId(contactId, res);
-    const isContactDeleted = await service.removeContact(contactId);
+    const isContactDeleted = await userInfo.removeContact(contactId);
     isContactDeleted
       ? res.status(200).json({ message: "Contact deleted successfully" })
       : res.status(404).json({ message: "Contact not found" });
@@ -80,7 +80,7 @@ const update = async (req, res, next) => {
     const { error } = validateUpdateContact(body);
     if (error) return res.status(400).send({ message: error.details });
     validateContactId(contactId, res);
-    const modifiedContact = await service.updateContact(contactId, body);
+    const modifiedContact = await userInfo.updateContact(contactId, body);
     if (modifiedContact) {
       res.status(200).json({
         message: "contact edited",
@@ -108,7 +108,7 @@ const favorite = async (req, res, next) => {
 
     validateContactId(contactId, res);
 
-    const editFavorite = await service.updateStatusContact(contactId, body);
+    const editFavorite = await userInfo.updateStatusContact(contactId, body);
 
     if (editFavorite) {
       res.status(200).json({
