@@ -15,15 +15,29 @@ const validateContactId = (contactId, res) => {
 
 const get = async (req, res, next) => {
   try {
-    const allContacts = await userInfo.getAllContacts();
+    const { page, limit, favorite } = req.query;
+
+    const allContacts = await userInfo
+      .getAllContacts()
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .exec();
+
+    const filteredContacts = allContacts.filter(
+      (contact) => contact.favorite === true
+    );
+
     res.status(200).json({
       message: "success",
-      data: { allContacts },
+      data: !favorite ? allContacts : filteredContacts,
+      page: page ?? 1,
+      contacts: !favorite ? allContacts.length : filteredContacts.length,
     });
   } catch (error) {
     res.status(500).json(`Contacts download error - ${error}`);
   }
 };
+
 
 const getById = async (req, res, next) => {
   try {

@@ -22,8 +22,19 @@ const editFavorite = Joi.object({
   favorite: Joi.boolean().required(),
 });
 
+
+const userSchema = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().min(4).required(),
+});
+
+const subscription = Joi.object({
+  subscription: Joi.string().valid("starter", "pro", "business").required(),
+});
+
 exports.validateAddContact = validator(contactSchema);
 exports.validateUpdateContact = validator(updateSchema);
 exports.validateFavorite = validator(editFavorite);
-
+exports.userValidator = validator(userSchema);
+exports.validateSubscription = validator(subscription);
 
