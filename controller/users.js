@@ -2,8 +2,8 @@ const { userValidator, validateSubscription } = require("../dataValidation");
 const jwt = require("jsonwebtoken");
 const secret = process.env.SECRET;
 const passport = require("passport");
-const { checkEmailAvailability, createUser } = require("../service");
-
+const { registerUser, findOne } = require("../service");
+       
 const signup = async (req, res, next) => {
   try {
     const { body } = req;
@@ -14,11 +14,11 @@ const signup = async (req, res, next) => {
     if (error) return res.status(400).json({ message: error });
 
     // Sprawdzenie dostępności adresu e-mail
-    const isEmailTaken = await checkEmailAvailability(email);
+    const isEmailTaken = await registerUser(email);
     if (isEmailTaken) return res.status(409).json({ message: "Email in use" });
 
     // Utworzenie użytkownika
-    const createdUser = await createUser(body);
+    const createdUser = await findOne(body);
     const { subscription } = createdUser;
 
     return res.status(201).json({
@@ -45,7 +45,7 @@ const login = async (req, res, next) => {
     const { error } = userValidator(body);
     if (error) return res.status(400).json({ message: error });
 
-    const user = await createUser(email);
+    const user = await findOne(email);
     if (!user)
       return res.status(401).json({ message: "There is no such user" });
 
