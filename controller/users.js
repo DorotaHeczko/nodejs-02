@@ -2,24 +2,22 @@ const { userValidator, validateSubscription } = require("../dataValidation");
 const jwt = require("jsonwebtoken");
 const secret = process.env.SECRET;
 const passport = require("passport");
-const { registerUser, findOne } = require("../service");
-       
+const { createUser, findUser } = require("../service/index");
+
 const signup = async (req, res, next) => {
   try {
     const { body } = req;
     const { email } = body;
 
-    // Walidacja danych użytkownika
     const { error } = userValidator(body);
     if (error) return res.status(400).json({ message: error });
 
-    // Sprawdzenie dostępności adresu e-mail
-    const isEmailTaken = await registerUser(email);
-    if (isEmailTaken) return res.status(409).json({ message: "Email in use" });
+    const user = await findUser(email);
+    if (user) return res.status(409).json({ message: "Email in use" });
 
-    // Utworzenie użytkownika
-    const createdUser = await findOne(body);
-    const { subscription } = createdUser;
+    const newUser = await createUser(body);
+
+    const { subscription } = newUser;
 
     return res.status(201).json({
       message: "user added",
@@ -35,8 +33,6 @@ const signup = async (req, res, next) => {
   }
 };
 
-
-
 const login = async (req, res, next) => {
   try {
     const { body } = req;
@@ -45,7 +41,7 @@ const login = async (req, res, next) => {
     const { error } = userValidator(body);
     if (error) return res.status(400).json({ message: error });
 
-    const user = await findOne(email);
+    const user = await findUser(email);
     if (!user)
       return res.status(401).json({ message: "There is no such user" });
 
@@ -80,17 +76,15 @@ const login = async (req, res, next) => {
   }
 };
 
-const auth = passport.authenticate("jwt", { session: false });
+const auth = (req, res, next) => {
+  passport.authenticate("jwt", { session: false }, (err, user) => {
+    if (!user || err)
+      return res.status(401).json({ message: "Not authorized" });
 
-const handleAuth = (req, res, next) => {
-  auth(req, res, (err) => {
-    if (err) return res.status(401).json({ message: "Not authorized" });
+    req.user = user;
     next();
-  });
+  })(req, res, next);
 };
-
-module.exports = handleAuth;
-
 
 const logout = async (req, res, next) => {
   try {
@@ -112,17 +106,18 @@ const logout = async (req, res, next) => {
 
 const current = (req, res, next) => {
   const { user } = req;
+  const { token } = user;
 
-  if (!user || !user.token) {
-    return res.status(401).json({ message: "Not authorized" });
-  }
+  if (!token) return res.status(401).json({ message: "Not authorized" });
 
-  const { email, subscription } = jwt.decode(user.token);
+  const decode = jwt.decode(token);
+  const { email, subscription } = decode;
 
-  return res.status(200).json({ email, subscription });
+  return res.status(200).json({
+    email,
+    subscription,
+  });
 };
-
-
 const subscription = async (req, res, next) => {
   try {
     const { body, user } = req;

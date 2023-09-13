@@ -17,9 +17,9 @@ const updateStatusContact = (id, fields) =>
   Contact.findOneAndUpdate({ _id: id }, { $set: fields }, { new: true });
 
 
-const findOne = async (email) => await User.findOne({ email });
+const findUser = async (email) => await User.findOne({ email });
 
-const registerUser = async ({ email, password }) => {
+const createUser = async ({ email, password }) => {
   const newUser = new User({ email, password });
   newUser.setPassword(password);
   await newUser.save();
@@ -33,8 +33,8 @@ module.exports = {
   updateContact,
   removeContact,
   updateStatusContact,
-  findOne,
-  registerUser,
+  findUser,
+  createUser,
 };
 
 
