@@ -1,20 +1,16 @@
 const app = require("./app");
 const mongoose = require("mongoose");
-require("dotenv").config();
 const uriDb = process.env.DB_HOST;
+const join = mongoose.connect(uriDb, { dbName: "db-contacts" });
 
-async function startServer() {
-  try {
-    await mongoose.connect(uriDb, { dbName: "db-contacts" });
-    console.log("Database connection successful");
-
+join
+  .then(() => {
     app.listen(3000, () => {
+      console.log("Databese connection successfull");
       console.log("Server running. Use our API on port: 3000");
     });
-  } catch (error) {
-    console.error(`Server not running. Error message: ${error.message}`);
+  })
+  .catch((error) => {
+    console.log(`Server not running. Error message: ${error.message}`);
     process.exit(1);
-  }
-}
-
-startServer();
+  });
