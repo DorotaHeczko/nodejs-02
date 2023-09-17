@@ -14,5 +14,14 @@ router.get("/current", contactController.auth, contactController.current);
 
 router.patch("/subscription", contactController.auth, contactController.subscription);
 
+
+
+router.patch(
+  "/avatars",
+  [contactController.auth, contactController.upload.single("avatar")],
+  contactController.avatars
+);
+
+
 module.exports = router;
 
