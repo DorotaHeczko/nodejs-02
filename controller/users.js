@@ -169,6 +169,36 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// const avatars = async (req, res, next) => {
+//   const { path: temporaryName, originalname } = req.file;
+//   const filename = path.join(uploadDir, originalname);
+//   const { user } = req;
+//   const { email, token } = user;
+//   const username = email.split("@")[0];
+//   const newAvatarPath = `${storeImage}/${username}.jpg`;
+
+//   try {
+//     if (!token) return res.status(401).json({ message: "Not authorized" });
+
+//     await fs.rename(temporaryName, filename);
+
+//     const avatarImg = await Jimp.read(filename);
+//     avatarImg.resize(250, 250).write(newAvatarPath);
+
+//     user.avatarURL = newAvatarPath;
+//     await user.save();
+
+//     await fs.unlink(filename);
+
+//     const { avatarURL } = user;
+
+//     return res.status(200).json({ avatarURL });
+//   } catch (error) {
+//     await fs.unlink(temporaryName);
+//     console.log(error);
+//     return res.status(401).json({ message: "Not authorized" });
+//   }
+// };
 const avatars = async (req, res, next) => {
   const { path: temporaryName, originalname } = req.file;
   const filename = path.join(uploadDir, originalname);
@@ -185,7 +215,7 @@ const avatars = async (req, res, next) => {
     const avatarImg = await Jimp.read(filename);
     avatarImg.resize(250, 250).write(newAvatarPath);
 
-    user.avatarURL = newAvatarPath;
+    user.avatarURL = `/avatars/${username}.jpg`; 
     await user.save();
 
     await fs.unlink(filename);
@@ -199,6 +229,7 @@ const avatars = async (req, res, next) => {
     return res.status(401).json({ message: "Not authorized" });
   }
 };
+
 
 
 
