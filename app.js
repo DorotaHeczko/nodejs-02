@@ -16,6 +16,7 @@ const logFormats = app.get("env") === "development" ? "dev" : "short";
 app.use(logger(logFormats));
 app.use(cors())
 app.use(express.json())
+app.use(express.static("public"));
 
 app.use("/api/contacts", myCustomRouter);
 app.use("/api/users", usersRouter);
