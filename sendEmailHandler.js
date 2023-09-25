@@ -1,9 +1,7 @@
-
 const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 dotenv.config();
-
-
+const uuid = require("uuid");
 
 const secretKey = process.env.MAILER;
 
@@ -17,7 +15,6 @@ const transporter = nodemailer.createTransport({
     rejectUnauthorized: false,
   },
 });
-
 
 const sendEmail = (email, url) => {
   const mailOptions = {
@@ -36,7 +33,11 @@ const sendEmail = (email, url) => {
   });
 };
 
+function generateVerificationToken() {
+  return uuid.v4();
+}
 
 module.exports = {
   sendEmail,
+  generateVerificationToken,
 };
