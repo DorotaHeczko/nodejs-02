@@ -36,7 +36,7 @@ const signup = async (req, res, next) => {
     const user = await findUser(email);
     if (user) return res.status(409).json({ message: "Email in use" });
 
-    const newUser = await createUser(body, avatarUrl);
+    const newUser = await createUser(body, avatarUrl, verificationToken);
       sendEmail(url);
 
     const { subscription } = newUser;
@@ -63,9 +63,17 @@ const login = async (req, res, next) => {
     const { error } = userValidator(body);
     if (error) return res.status(400).json({ message: error });
 
+
     const user = await findUser(email);
-    if (!user)
-      return res.status(401).json({ message: "There is no such user" });
+
+
+        if (!user.verify)
+          return res
+            .status(401)
+            .json({ message: "Please verify your email first" });
+
+        if (!user)
+          return res.status(401).json({ message: "There is no such user" });
 
     const isPasswordMatch = user.validPassword(password);
     if (!isPasswordMatch)
