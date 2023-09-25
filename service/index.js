@@ -19,13 +19,24 @@ const updateStatusContact = (id, fields) =>
 
 const findUser = async (email) => await User.findOne({ email });
 
-const createUser = async ({ email, password }, avatarURL) => {
-  const newUser = new User({ email, password });
+const createUser = async (
+  { email, password },
+  avatarURL,
+  verificationToken
+) => {
+  const newUser = new User({ email, password, verificationToken });
+
   newUser.setPassword(password);
   newUser.avatarURL = avatarURL;
+
   await newUser.save();
+
   return newUser;
 };
+
+const findVerificationToken = async (token) =>
+  await User.findOne({ verificationToken: token });
+
 
 module.exports = {
   getAllContacts,
@@ -36,6 +47,7 @@ module.exports = {
   updateStatusContact,
   findUser,
   createUser,
+  findVerificationToken,
 };
 
 

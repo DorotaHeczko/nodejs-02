@@ -23,5 +23,9 @@ router.patch(
 );
 
 
+router.get("/verify/:verificationToken", contactController.verifyUser);
+
+router.post("/verify", contactController.resendVerificationEmail);
+
 module.exports = router;
 
