@@ -37,6 +37,8 @@ function generateVerificationToken() {
   return uuid.v4();
 }
 
+
+
 module.exports = {
   sendEmail,
   generateVerificationToken,

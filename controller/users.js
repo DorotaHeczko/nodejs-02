@@ -28,6 +28,7 @@ const signup = async (req, res, next) => {
     const { email } = body;
     const avatarUrl = gravatar.url(email);
     const verificationToken = nanoid();
+    console.log("Generated verificationToken:", verificationToken);
     const url = `http://localhost:3000/api/users/verify/${verificationToken}`;
 
     const { error } = userValidator(body);
@@ -37,7 +38,7 @@ const signup = async (req, res, next) => {
     if (user) return res.status(409).json({ message: "Email in use" });
 
     const newUser = await createUser(body, avatarUrl, verificationToken);
-      sendEmail(url);
+      sendEmail(email, url);
 
     const { subscription } = newUser;
 
