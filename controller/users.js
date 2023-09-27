@@ -1,8 +1,16 @@
-const { userValidator, validateSubscription } = require("../dataValidation");
+const {
+  userValidator,
+  validateSubscription,
+  validateEmail,
+} = require("../dataValidation");
 const jwt = require("jsonwebtoken");
 const secret = process.env.SECRET;
 const passport = require("passport");
-const { createUser, findUser } = require("../service/index");
+const {
+  createUser,
+  findUser,
+  findVerificationToken,
+} = require("../service/index");
 const gravatar = require("gravatar");
 const multer = require("multer");
 const fs = require("fs").promises;
@@ -11,7 +19,12 @@ const Jimp = require("jimp");
 const uploadDir = path.join(process.cwd(), "tmp");
 const createPublic = path.join(process.cwd(), "public");
 const storeImage = path.join(createPublic, "avatars");
- 
+// const { nanoid } = require("nanoid");
+const { sendEmail } = require("../sendEmailHandler");
+// const Mailer = require("../../mailer");
+const uuid = require("uuid");
+
+
 
 const signup = async (req, res, next) => {
   try {
@@ -19,13 +32,18 @@ const signup = async (req, res, next) => {
     const { email } = body;
     const avatarUrl = gravatar.url(email);
 
+    const verificationToken = uuid.v4();
+    console.log("Generated verificationToken:", verificationToken);
+    const url = `http://localhost:3000/api/users/verify/${verificationToken}`;
+
     const { error } = userValidator(body);
     if (error) return res.status(400).json({ message: error });
 
     const user = await findUser(email);
     if (user) return res.status(409).json({ message: "Email in use" });
 
-    const newUser = await createUser(body, avatarUrl);
+    const newUser = await createUser(body, avatarUrl, verificationToken);
+       await sendEmail(email, url);
 
     const { subscription } = newUser;
 
@@ -43,6 +61,8 @@ const signup = async (req, res, next) => {
   }
 };
 
+
+
 const login = async (req, res, next) => {
   try {
     const { body } = req;
@@ -51,9 +71,17 @@ const login = async (req, res, next) => {
     const { error } = userValidator(body);
     if (error) return res.status(400).json({ message: error });
 
+
     const user = await findUser(email);
-    if (!user)
-      return res.status(401).json({ message: "There is no such user" });
+
+
+        if (!user.verify)
+          return res
+            .status(401)
+            .json({ message: "Please verify your email first" });
+
+        if (!user)
+          return res.status(401).json({ message: "There is no such user" });
 
     const isPasswordMatch = user.validPassword(password);
     if (!isPasswordMatch)
@@ -152,7 +180,6 @@ const subscription = async (req, res, next) => {
   } catch (error) {
     return res.status(500).json(`User update error - ${error}`);
   }
-  
 };
 
 const storage = multer.diskStorage({
@@ -169,36 +196,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// const avatars = async (req, res, next) => {
-//   const { path: temporaryName, originalname } = req.file;
-//   const filename = path.join(uploadDir, originalname);
-//   const { user } = req;
-//   const { email, token } = user;
-//   const username = email.split("@")[0];
-//   const newAvatarPath = `${storeImage}/${username}.jpg`;
-
-//   try {
-//     if (!token) return res.status(401).json({ message: "Not authorized" });
-
-//     await fs.rename(temporaryName, filename);
-
-//     const avatarImg = await Jimp.read(filename);
-//     avatarImg.resize(250, 250).write(newAvatarPath);
-
-//     user.avatarURL = newAvatarPath;
-//     await user.save();
-
-//     await fs.unlink(filename);
-
-//     const { avatarURL } = user;
-
-//     return res.status(200).json({ avatarURL });
-//   } catch (error) {
-//     await fs.unlink(temporaryName);
-//     console.log(error);
-//     return res.status(401).json({ message: "Not authorized" });
-//   }
-// };
 const avatars = async (req, res, next) => {
   const { path: temporaryName, originalname } = req.file;
   const filename = path.join(uploadDir, originalname);
@@ -215,7 +212,7 @@ const avatars = async (req, res, next) => {
     const avatarImg = await Jimp.read(filename);
     avatarImg.resize(250, 250).write(newAvatarPath);
 
-    user.avatarURL = `/avatars/${username}.jpg`; 
+    user.avatarURL = `/avatars/${username}.jpg`;
     await user.save();
 
     await fs.unlink(filename);
@@ -230,8 +227,49 @@ const avatars = async (req, res, next) => {
   }
 };
 
+const verifyUser = async (req, res, next) => {
+  try {
+    const { verificationToken } = req.params;
 
+    const findToken = await findVerificationToken(verificationToken);
 
+    if (!findToken) return res.status(404).json({ message: "User not found" });
+
+    findToken.verify = true;
+    findToken.verificationToken = "null";
+    await findToken.save();
+
+    return res.status(200).json({ message: "Verification successful" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send();
+  }
+};
+
+const resendVerificationEmail = async (req, res, next) => {
+  try {
+    const { body } = req;
+    const { email } = body;
+
+    const user = await findUser(email);
+    const { verify, verificationToken } = user;
+    const url = `http://localhost:3000/api/users/verify/${verificationToken}`;
+
+    const { error } = validateEmail(body);
+    if (error) return res.status(400).json({ error });
+
+    if (verify)
+      return res
+        .status(400)
+        .json({ message: "Verification has already been passed" });
+
+    sendEmail(url);
+
+    return res.status(200).json({ message: "Verification email sent" });
+  } catch (error) {
+    return res.status(500).send();
+  }
+};
 
 module.exports = {
   signup,
@@ -245,4 +283,6 @@ module.exports = {
   uploadDir,
   storeImage,
   createPublic,
+  verifyUser,
+  resendVerificationEmail,
 };
