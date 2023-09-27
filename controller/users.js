@@ -43,7 +43,7 @@ const signup = async (req, res, next) => {
     if (user) return res.status(409).json({ message: "Email in use" });
 
     const newUser = await createUser(body, avatarUrl, verificationToken);
-    sendEmail(email, url);
+       await sendEmail(email, url);
 
     const { subscription } = newUser;
 
