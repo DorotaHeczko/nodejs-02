@@ -19,15 +19,20 @@ const Jimp = require("jimp");
 const uploadDir = path.join(process.cwd(), "tmp");
 const createPublic = path.join(process.cwd(), "public");
 const storeImage = path.join(createPublic, "avatars");
-const { nanoid } = require("nanoid");
+// const { nanoid } = require("nanoid");
 const { sendEmail } = require("../sendEmailHandler");
+// const Mailer = require("../../mailer");
+const uuid = require("uuid");
+
+
 
 const signup = async (req, res, next) => {
   try {
     const { body } = req;
     const { email } = body;
     const avatarUrl = gravatar.url(email);
-    const verificationToken = nanoid();
+
+    const verificationToken = uuid.v4();
     console.log("Generated verificationToken:", verificationToken);
     const url = `http://localhost:3000/api/users/verify/${verificationToken}`;
 
@@ -38,7 +43,7 @@ const signup = async (req, res, next) => {
     if (user) return res.status(409).json({ message: "Email in use" });
 
     const newUser = await createUser(body, avatarUrl, verificationToken);
-      sendEmail(email, url);
+    sendEmail(email, url);
 
     const { subscription } = newUser;
 
@@ -55,6 +60,8 @@ const signup = async (req, res, next) => {
     return res.status(500).json(`User create error - ${error}`);
   }
 };
+
+
 
 const login = async (req, res, next) => {
   try {

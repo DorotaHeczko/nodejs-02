@@ -26,12 +26,13 @@ const sendEmail = (email, url) => {
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
-      console.error(error);
+       console.error("Error sending email:", error);
     } else {
       console.log("Email sent", info.response);
     }
   });
 };
+
 
 function generateVerificationToken() {
   return uuid.v4();
